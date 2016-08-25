@@ -53,9 +53,7 @@ define([
         infoTextNode: null,
 
         // Parameters configured in the Modeler.
-        mfToExecute: "",
-        messageString: "",
-        backgroundColor: "",
+        targetGraph: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -77,8 +75,9 @@ define([
               this._readOnly = true;
             }
 
-            this._updateRendering();
-            this._setupEvents();
+            this._getSources();
+//            this._updateRendering();
+//            this._setupEvents();
         },
 
         // mxui.widget._WidgetBase.update is called when context is changed or initialized. Implement to re-render and / or fetch data.
@@ -118,6 +117,19 @@ define([
                 dojoEvent.stop(e);
             }
         },
+        
+        // get the list of source for an App
+        _getSources: function() {
+            console.log('started');
+            console.log(this._contextObj);
+            logger.debug(this.id + "._getSources");
+            logger.debug(this._contextObj);
+            //make GET on urls
+//            this.targetGraph
+            //get 2 series of points
+            //display series
+            
+        }
 
         // Attach events to HTML dom elements
         _setupEvents: function () {

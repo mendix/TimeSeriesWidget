@@ -35,13 +35,15 @@ define([
     "dojo/_base/event",
 
     "TimeSeries/lib/jquery-1.11.2",
+    "TimeSeries/lib/d3-queue-3.0.3",
     "dojo/text!TimeSeries/widget/template/TimeSeries.html",
     "TimeSeries/lib/d3-3.5.17",
     "TimeSeries/lib/nv.d3.min-1.8.1"
-], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, dojoLang, dojoText, dojoHtml, dojoEvent, _jQuery, widgetTemplate) {
+], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, dojoLang, dojoText, dojoHtml, dojoEvent, _jQuery, _Queue, widgetTemplate) {
     "use strict";
 
     var $ = _jQuery.noConflict(true);
+    window.d3.queue = _Queue.queue;
 
     // Declare widget's prototype.
     return declare("TimeSeries.widget.TimeSeries", [ _WidgetBase, _TemplatedMixin ], {
@@ -52,9 +54,10 @@ define([
         svgNode: null,
 
         // Parameters configured in the Modeler.
-        mfToExecute: "",
-        messageString: "",
-        backgroundColor: "",
+        graphTitle: "",
+        graphSourceURL: "",
+        graphSourceIsStacked: "",
+        graphSourceCaption: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -85,7 +88,9 @@ define([
             logger.debug(this.id + ".update");
 
             this._contextObj = obj;
-            console.log(obj.getReferences("MyFirstModule.Graph_GraphSource"));
+            console.log(this.graphSourceURL);
+            console.log(this.graphTitle);
+            //console.log(obj.getReferences("MyFirstModule.Graph_GraphSource"));
             this._resetSubscriptions();
             this._updateRendering(callback); // We're passing the callback to updateRendering to be called after DOM-manipulation
         },
@@ -188,39 +193,6 @@ define([
             mendix.lang.nullExec(callback);
         },
 
-        _renderGraph: function () {
-          var svgNode = this.svgNode;
-          d3.json('/widgets/TimeSeries/lib/stackedAreaData.json', function(data) {
-            nv.addGraph(function() {
-              var chart = nv.models.stackedAreaChart()
-                .margin({right: 100})
-                .x(function(d) { return d[0] })   //We can modify the data accessor functions...
-                .y(function(d) { return d[1] })   //...in case your data is formatted differently.
-                .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
-                .showControls(false)
-                .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
-                .clipEdge(true);
-
-              //Format x-axis labels with custom function.
-              chart.xAxis
-                .tickFormat(function(d) {
-                  return d3.time.format('%x')(new Date(d))
-                });
-
-              chart.yAxis
-                .tickFormat(d3.format(',.2f'));
-
-              d3.select(svgNode)
-                .datum(data)
-                .call(chart);
-
-              nv.utils.windowResize(chart.update);
-
-              return chart;
-            });
-          });
-        },
-
         // Handle validations.
         _handleValidation: function (validations) {
             logger.debug(this.id + "._handleValidation");
@@ -304,7 +276,86 @@ define([
 
                 this._handles = [ objectHandle, attrHandle, validationHandle ];
             }
-        }
+        },
+
+        // Helper/Internal functions
+        _renderGraph: function () {
+          this._fetchGraphSources(this._processGraphSources);
+        },
+        _processGraphSources: function (objs) {
+          var graphSourceURL = this._parseAttributeName(this.graphSourceURL);
+          var graphSourceCaption = this._parseAttributeName(this.graphSourceCaption);
+          var graphSourceIsStacked = this._parseAttributeName(this.graphSourceIsStacked);
+
+          var sources = objs.map(function(graphSource){
+            return {
+              url: graphSource.get(graphSourceURL),
+              caption: graphSource.get(graphSourceCaption),
+              isStacked: graphSource.get(graphSourceIsStacked)
+            };
+          });
+          this._renderGraphInternal(sources);
+        },
+
+        _renderGraphInternal: function (sources) {
+          var svgNode = this.svgNode;
+          var queue = d3.queue();
+          sources.map(function(item){
+            queue.defer(d3.json, item.url);
+          });
+          queue.awaitAll(function(error, results){
+            console.log(results);
+            console.log(error);
+          });
+
+          d3.json('/widgets/TimeSeries/lib/stackedAreaData.json', function(data) {
+            nv.addGraph(function() {
+              var chart = nv.models.stackedAreaChart()
+                .margin({right: 100})
+                .x(function(d) { return d[0] })   //We can modify the data accessor functions...
+                .y(function(d) { return d[1] })   //...in case your data is formatted differently.
+                .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
+                .showControls(false)
+                .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
+                .clipEdge(true);
+
+              //Format x-axis labels with custom function.
+              chart.xAxis
+                .tickFormat(function(d) {
+                  return d3.time.format('%x')(new Date(d))
+                });
+
+              chart.yAxis
+                .tickFormat(d3.format(',.2f'));
+
+              d3.select(svgNode)
+                .datum(data)
+                .call(chart);
+
+              nv.utils.windowResize(chart.update);
+
+              return chart;
+            });
+          });
+        },
+
+        _fetchGraphSources: function (callback) {
+          var referenceName = this._parseReferenceName(this.graphSourceURL);
+          var graphSourceGuids = this._contextObj.getReferences(referenceName);
+          mx.data.get({
+            guids: graphSourceGuids,
+            callback: callback
+          }, this);
+        },
+        _parseReferenceName: function (attributePath) {
+          return attributePath.split("/")[0];
+        },
+        _parseEntityName: function (attributePath) {
+          return attributePath.split("/")[1];
+        },
+        _parseAttributeName: function (attributePath) {
+          return attributePath.split("/")[2];
+        },
     });
 });
 

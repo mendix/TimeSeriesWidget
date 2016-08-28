@@ -54,9 +54,8 @@ define([
         svgNode: null,
 
         // Parameters configured in the Modeler.
-        graphTitle: "",
+        graphType: "",
         graphSourceURL: "",
-        graphSourceIsStacked: "",
         graphSourceCaption: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
@@ -89,7 +88,6 @@ define([
 
             this._contextObj = obj;
             console.log(this.graphSourceURL);
-            console.log(this.graphTitle);
             //console.log(obj.getReferences("MyFirstModule.Graph_GraphSource"));
             this._resetSubscriptions();
             this._updateRendering(callback); // We're passing the callback to updateRendering to be called after DOM-manipulation
@@ -285,13 +283,11 @@ define([
         _processGraphSources: function (objs) {
           var graphSourceURL = this._parseAttributeName(this.graphSourceURL);
           var graphSourceCaption = this._parseAttributeName(this.graphSourceCaption);
-          var graphSourceIsStacked = this._parseAttributeName(this.graphSourceIsStacked);
 
           var sources = objs.map(function(graphSource){
             return {
               url: graphSource.get(graphSourceURL),
               caption: graphSource.get(graphSourceCaption),
-              isStacked: graphSource.get(graphSourceIsStacked)
             };
           });
           this._renderGraphInternal(sources);
@@ -300,6 +296,7 @@ define([
         _marshallSources: function (captions, results) {
           var svgNode = this.svgNode;
           var data = [];
+          var _widget = this;
           var i;
           for (i = 0; i < captions.length; i++) {
             data.push({
@@ -309,15 +306,19 @@ define([
               })
             });
           }
-          console.log(data);
 
           nv.addGraph(function() {
-            var chart = nv.models.stackedAreaChart()
-              .margin({right: 100})
+            var chart;
+            if (_widget.graphType == "line") {
+              chart = nv.models.lineChart();
+            } else {
+              chart = nv.models.stackedAreaChart();
+              chart = chart.showControls(false);
+            }
+            chart = chart.margin({right: 100})
               .x(function(d) { return d[0] })   //We can modify the data accessor functions...
               .y(function(d) { return d[1] })   //...in case your data is formatted differently.
               .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
-              .showControls(false)
               .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
               .clipEdge(true);
 

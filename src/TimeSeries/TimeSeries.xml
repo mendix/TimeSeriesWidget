@@ -6,13 +6,14 @@
     <icon />
 
     <properties>
-        <property key="graphTitle" type="attribute">
-            <caption>Title</caption>
+        <property key="graphType" type="enumeration" defaultValue="line">
+            <caption>Graph type</caption>
             <category>Appearance</category>
             <description></description>
-            <attributeTypes>
-                <attributeType name="String" />
-            </attributeTypes>
+            <enumerationValues>
+                <enumerationValue key="line">Line</enumerationValue>
+                <enumerationValue key="stackedarea">Stacked Area</enumerationValue>
+            </enumerationValues>
         </property>
         <property key="graphSourceURL" type="attribute" isPath="yes" pathType="referenceSet">
             <caption>URL</caption>
@@ -20,14 +21,6 @@
             <description></description>
             <attributeTypes>
                 <attributeType name="String" />
-            </attributeTypes>
-        </property>
-        <property key="graphSourceIsStacked" type="attribute" isPath="yes" pathType="referenceSet">
-            <caption>Is stacked?</caption>
-            <category>Graph source</category>
-            <description></description>
-            <attributeTypes>
-                <attributeType name="Boolean" />
             </attributeTypes>
         </property>
         <property key="graphSourceCaption" type="attribute" isPath="yes" pathType="referenceSet">

@@ -297,45 +297,63 @@ define([
           this._renderGraphInternal(sources);
         },
 
-        _renderGraphInternal: function (sources) {
+        _marshallSources: function (captions, results) {
           var svgNode = this.svgNode;
+          var data = [];
+          var i;
+          for (i = 0; i < captions.length; i++) {
+            data.push({
+              key: captions[i],
+              values: results[i].map(function(item){
+                return [item.timestamp, item.value];
+              })
+            });
+          }
+          console.log(data);
+
+          nv.addGraph(function() {
+            var chart = nv.models.stackedAreaChart()
+              .margin({right: 100})
+              .x(function(d) { return d[0] })   //We can modify the data accessor functions...
+              .y(function(d) { return d[1] })   //...in case your data is formatted differently.
+              .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
+              .showControls(false)
+              .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
+              .clipEdge(true);
+
+            //Format x-axis labels with custom function.
+            chart.xAxis
+              .tickFormat(function(d) {
+                return d3.time.format('%x')(new Date(d))
+              });
+
+            chart.yAxis
+              .tickFormat(d3.format(',.2f'));
+
+            d3.select(svgNode)
+              .datum(data)
+              .call(chart);
+
+            nv.utils.windowResize(chart.update);
+
+            return chart;
+          });
+        },
+
+        _renderGraphInternal: function (sources) {
+          var _widget = this;
+          var captions = sources.map(function(item){
+            return item.caption;
+          });
           var queue = d3.queue();
           sources.map(function(item){
             queue.defer(d3.json, item.url);
           });
           queue.awaitAll(function(error, results){
-            console.log(results);
             console.log(error);
-          });
-
-          d3.json('/widgets/TimeSeries/lib/stackedAreaData.json', function(data) {
-            nv.addGraph(function() {
-              var chart = nv.models.stackedAreaChart()
-                .margin({right: 100})
-                .x(function(d) { return d[0] })   //We can modify the data accessor functions...
-                .y(function(d) { return d[1] })   //...in case your data is formatted differently.
-                .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
-                .showControls(false)
-                .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
-                .clipEdge(true);
-
-              //Format x-axis labels with custom function.
-              chart.xAxis
-                .tickFormat(function(d) {
-                  return d3.time.format('%x')(new Date(d))
-                });
-
-              chart.yAxis
-                .tickFormat(d3.format(',.2f'));
-
-              d3.select(svgNode)
-                .datum(data)
-                .call(chart);
-
-              nv.utils.windowResize(chart.update);
-
-              return chart;
-            });
+            if (!error) {
+              _widget._marshallSources(captions, results);
+            }
           });
         },
 

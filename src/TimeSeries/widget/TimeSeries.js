@@ -1,9 +1,9 @@
 /*global logger*/
 /*
-    WidgetName
+    TimeSeries
     ========================
 
-    @file      : WidgetName.js
+    @file      : TimeSeries.js
     @version   : {{version}}
     @author    : {{author}}
     @date      : {{date}}
@@ -34,26 +34,27 @@ define([
     "dojo/html",
     "dojo/_base/event",
 
-    "WidgetName/lib/jquery-1.11.2",
-    "dojo/text!WidgetName/widget/template/WidgetName.html"
+    "TimeSeries/lib/jquery-1.11.2",
+    "dojo/text!TimeSeries/widget/template/TimeSeries.html",
+    "TimeSeries/lib/d3-3.5.17",
+    "TimeSeries/lib/nv.d3.min-1.8.1"
 ], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, dojoLang, dojoText, dojoHtml, dojoEvent, _jQuery, widgetTemplate) {
     "use strict";
 
     var $ = _jQuery.noConflict(true);
 
     // Declare widget's prototype.
-    return declare("WidgetName.widget.WidgetName", [ _WidgetBase, _TemplatedMixin ], {
+    return declare("TimeSeries.widget.TimeSeries", [ _WidgetBase, _TemplatedMixin ], {
         // _TemplatedMixin will create our dom node using this HTML template.
         templateString: widgetTemplate,
 
         // DOM elements
-        inputNodes: null,
-        colorSelectNode: null,
-        colorInputNode: null,
-        infoTextNode: null,
+        svgNode: null,
 
         // Parameters configured in the Modeler.
-        targetGraph: "",
+        mfToExecute: "",
+        messageString: "",
+        backgroundColor: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -75,8 +76,7 @@ define([
               this._readOnly = true;
             }
 
-            this._getSources();
-//            this._updateRendering();
+            this._updateRendering();
 //            this._setupEvents();
         },
 
@@ -85,6 +85,7 @@ define([
             logger.debug(this.id + ".update");
 
             this._contextObj = obj;
+            console.log(obj.getReferences("MyFirstModule.Graph_GraphSource"));
             this._resetSubscriptions();
             this._updateRendering(callback); // We're passing the callback to updateRendering to be called after DOM-manipulation
         },
@@ -117,28 +118,18 @@ define([
                 dojoEvent.stop(e);
             }
         },
-        
-        // get the list of source for an App
-        _getSources: function() {
-            console.log('started');
-            console.log(this._contextObj);
-            logger.debug(this.id + "._getSources");
-            logger.debug(this._contextObj);
-            //make GET on urls
-//            this.targetGraph
-            //get 2 series of points
-            //display series
-            
-        }
 
         // Attach events to HTML dom elements
         _setupEvents: function () {
             logger.debug(this.id + "._setupEvents");
+            /*
             this.connect(this.colorSelectNode, "change", function (e) {
                 // Function from mendix object to set an attribute.
                 this._contextObj.set(this.backgroundColor, this.colorSelectNode.value);
             });
+            */
 
+            /*
             this.connect(this.infoTextNode, "click", function (e) {
                 // Only on mobile stop event bubbling!
                 this._stopBubblingEventOnMobile(e);
@@ -163,24 +154,29 @@ define([
                     }, this);
                 }
             });
+            */
         },
 
         // Rerender the interface.
         _updateRendering: function (callback) {
             logger.debug(this.id + "._updateRendering");
+            /*
             this.colorSelectNode.disabled = this._readOnly;
             this.colorInputNode.disabled = this._readOnly;
+            */
 
             if (this._contextObj !== null) {
                 dojoStyle.set(this.domNode, "display", "block");
 
-                var colorValue = this._contextObj.get(this.backgroundColor);
+                //var colorValue = this._contextObj.get(this.backgroundColor);
 
-                this.colorInputNode.value = colorValue;
-                this.colorSelectNode.value = colorValue;
+                //this.colorInputNode.value = colorValue;
+                //this.colorSelectNode.value = colorValue;
 
-                dojoHtml.set(this.infoTextNode, this.messageString);
-                dojoStyle.set(this.infoTextNode, "background-color", colorValue);
+                //dojoHtml.set(this.infoTextNode, this.messageString);
+                this._renderGraph();
+
+                //dojoStyle.set(this.infoTextNode, "background-color", colorValue);
             } else {
                 dojoStyle.set(this.domNode, "display", "none");
             }
@@ -190,6 +186,39 @@ define([
 
             // The callback, coming from update, needs to be executed, to let the page know it finished rendering
             mendix.lang.nullExec(callback);
+        },
+
+        _renderGraph: function () {
+          var svgNode = this.svgNode;
+          d3.json('/widgets/TimeSeries/lib/stackedAreaData.json', function(data) {
+            nv.addGraph(function() {
+              var chart = nv.models.stackedAreaChart()
+                .margin({right: 100})
+                .x(function(d) { return d[0] })   //We can modify the data accessor functions...
+                .y(function(d) { return d[1] })   //...in case your data is formatted differently.
+                .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
+                .showControls(false)
+                .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
+                .clipEdge(true);
+
+              //Format x-axis labels with custom function.
+              chart.xAxis
+                .tickFormat(function(d) {
+                  return d3.time.format('%x')(new Date(d))
+                });
+
+              chart.yAxis
+                .tickFormat(d3.format(',.2f'));
+
+              d3.select(svgNode)
+                .datum(data)
+                .call(chart);
+
+              nv.utils.windowResize(chart.update);
+
+              return chart;
+            });
+          });
         },
 
         // Handle validations.
@@ -279,4 +308,4 @@ define([
     });
 });
 
-require(["WidgetName/widget/WidgetName"]);
+require(["TimeSeries/widget/TimeSeries"]);

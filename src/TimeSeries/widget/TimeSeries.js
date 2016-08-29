@@ -77,13 +77,7 @@ define([
         // dijit._WidgetBase.postCreate is called after constructing the widget. Implement to do extra setup work.
         postCreate: function () {
             logger.debug(this.id + ".postCreate");
-
-            if (this.readOnly || this.get("disabled") || this.readonly) {
-              this._readOnly = true;
-            }
-
             this._updateRendering();
-//            this._setupEvents();
         },
 
         // mxui.widget._WidgetBase.update is called when context is changed or initialized. Implement to re-render and / or fetch data.
@@ -91,20 +85,8 @@ define([
             logger.debug(this.id + ".update");
 
             this._contextObj = obj;
-            console.log(this.graphSourceURL);
-            //console.log(obj.getReferences("MyFirstModule.Graph_GraphSource"));
             this._resetSubscriptions();
             this._updateRendering(callback); // We're passing the callback to updateRendering to be called after DOM-manipulation
-        },
-
-        // mxui.widget._WidgetBase.enable is called when the widget should enable editing. Implement to enable editing if widget is input widget.
-        enable: function () {
-          logger.debug(this.id + ".enable");
-        },
-
-        // mxui.widget._WidgetBase.enable is called when the widget should disable editing. Implement to disable editing if widget is input widget.
-        disable: function () {
-          logger.debug(this.id + ".disable");
         },
 
         // mxui.widget._WidgetBase.resize is called when the page's layout is recalculated. Implement to do sizing calculations. Prefer using CSS instead.
@@ -126,96 +108,21 @@ define([
             }
         },
 
-        // Attach events to HTML dom elements
-        _setupEvents: function () {
-            logger.debug(this.id + "._setupEvents");
-            /*
-            this.connect(this.colorSelectNode, "change", function (e) {
-                // Function from mendix object to set an attribute.
-                this._contextObj.set(this.backgroundColor, this.colorSelectNode.value);
-            });
-            */
-
-            /*
-            this.connect(this.infoTextNode, "click", function (e) {
-                // Only on mobile stop event bubbling!
-                this._stopBubblingEventOnMobile(e);
-
-                // If a microflow has been set execute the microflow on a click.
-                if (this.mfToExecute !== "") {
-                    mx.data.action({
-                        params: {
-                            applyto: "selection",
-                            actionname: this.mfToExecute,
-                            guids: [ this._contextObj.getGuid() ]
-                        },
-                        store: {
-                            caller: this.mxform
-                        },
-                        callback: function (obj) {
-                            //TODO what to do when all is ok!
-                        },
-                        error: dojoLang.hitch(this, function (error) {
-                            logger.error(this.id + ": An error occurred while executing microflow: " + error.description);
-                        })
-                    }, this);
-                }
-            });
-            */
-        },
-
         // Rerender the interface.
         _updateRendering: function (callback) {
             logger.debug(this.id + "._updateRendering");
-            /*
-            this.colorSelectNode.disabled = this._readOnly;
-            this.colorInputNode.disabled = this._readOnly;
-            */
 
             if (this._contextObj !== null) {
                 dojoStyle.set(this.domNode, "display", "block");
 
-                //var colorValue = this._contextObj.get(this.backgroundColor);
-
-                //this.colorInputNode.value = colorValue;
-                //this.colorSelectNode.value = colorValue;
-
-                //dojoHtml.set(this.infoTextNode, this.messageString);
                 this._renderGraph();
 
-                //dojoStyle.set(this.infoTextNode, "background-color", colorValue);
             } else {
                 dojoStyle.set(this.domNode, "display", "none");
             }
 
-            // Important to clear all validations!
-            this._clearValidations();
-
             // The callback, coming from update, needs to be executed, to let the page know it finished rendering
             mendix.lang.nullExec(callback);
-        },
-
-        // Handle validations.
-        _handleValidation: function (validations) {
-            logger.debug(this.id + "._handleValidation");
-            this._clearValidations();
-
-            var validation = validations[0],
-                message = validation.getReasonByAttribute(this.backgroundColor);
-
-            if (this._readOnly) {
-                validation.removeAttribute(this.backgroundColor);
-            } else if (message) {
-                this._addValidation(message);
-                validation.removeAttribute(this.backgroundColor);
-            }
-        },
-
-        // Clear validations.
-        _clearValidations: function () {
-            logger.debug(this.id + "._clearValidations");
-            dojoConstruct.destroy(this._alertDiv);
-            this._alertDiv = null;
         },
 
         // Show an error message.
@@ -230,12 +137,6 @@ define([
                 "innerHTML": message
             });
             dojoConstruct.place(this._alertDiv, this.domNode);
-        },
-
-        // Add a validation.
-        _addValidation: function (message) {
-            logger.debug(this.id + "._addValidation");
-            this._showError(message);
         },
 
         _unsubscribe: function () {
@@ -358,10 +259,10 @@ define([
               chart = chart.showControls(false);
             }
             chart = chart.margin({right: 100})
-              .x(function(d) { return d[0] })   //We can modify the data accessor functions...
-              .y(function(d) { return d[1] })   //...in case your data is formatted differently.
-              .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
-              .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
+              .x(function(d) { return d[0] })
+              .y(function(d) { return d[1] })
+              .useInteractiveGuideline(true)
+              .rightAlignYAxis(true)
               .clipEdge(true);
 
             //Format x-axis labels with custom function.
@@ -399,8 +300,9 @@ define([
             queue.defer(d3.json, item.url);
           });
           queue.awaitAll(function(error, results){
-            console.log(error);
-            if (!error) {
+            if (error) {
+              _widget._showError(error);
+            } else {
               _widget._marshallSources(captions, colors, results);
             }
           });

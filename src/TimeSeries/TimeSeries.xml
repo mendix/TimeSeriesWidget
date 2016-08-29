@@ -15,10 +15,37 @@
                 <enumerationValue key="stackedarea">Stacked Area</enumerationValue>
             </enumerationValues>
         </property>
+        <property key="graphLabel" type="string" required="false">
+            <caption>Y-axis label</caption>
+            <category>Appearance</category>
+            <description></description>
+        </property>
+        <property key="dataFormat" type="enumeration" defaultValue="decimal">
+            <caption>Data format</caption>
+            <category>Appearance</category>
+            <description></description>
+            <enumerationValues>
+                <enumerationValue key="decimal">Decimal e.g. 1, 100</enumerationValue>
+                <enumerationValue key="bytes">Bytes e.g. 12B, 45MB</enumerationValue>
+            </enumerationValues>
+        </property>
+        <property key="dataPeriod" type="enumeration" defaultValue="auto">
+            <caption>Data period</caption>
+            <category>Appearance</category>
+            <description>What time frame does this data show?</description>
+            <enumerationValues>
+                <enumerationValue key="auto">Automatically</enumerationValue>
+                <enumerationValue key="hour">Hour</enumerationValue>
+                <enumerationValue key="day">Day</enumerationValue>
+                <enumerationValue key="week">Week</enumerationValue>
+                <enumerationValue key="month">Month</enumerationValue>
+                <enumerationValue key="year">Year</enumerationValue>
+            </enumerationValues>
+        </property>
         <property key="graphSourceURL" type="attribute" isPath="yes" pathType="referenceSet">
             <caption>URL</caption>
             <category>Graph source</category>
-            <description></description>
+            <description>URL that replies with a JSON</description>
             <attributeTypes>
                 <attributeType name="String" />
             </attributeTypes>
@@ -26,7 +53,15 @@
         <property key="graphSourceCaption" type="attribute" isPath="yes" pathType="referenceSet">
             <caption>Caption</caption>
             <category>Graph source</category>
-            <description></description>
+            <description>Name used to render the legend and tooltip.</description>
+            <attributeTypes>
+                <attributeType name="String" />
+            </attributeTypes>
+        </property>
+        <property key="graphSourceColor" type="attribute" required="false" isPath="yes" pathType="referenceSet">
+            <caption>Color</caption>
+            <category>Graph source</category>
+            <description>E.g. red, #123456. Leave empty for automated assignment.</description>
             <attributeTypes>
                 <attributeType name="String" />
             </attributeTypes>

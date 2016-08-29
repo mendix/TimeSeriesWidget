@@ -55,8 +55,12 @@ define([
 
         // Parameters configured in the Modeler.
         graphType: "",
+        graphLabel: "",
+        dataPeriod: "",
+        dataFormat: "",
         graphSourceURL: "",
         graphSourceCaption: "",
+        graphSourceColor: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -280,6 +284,34 @@ define([
         _renderGraph: function () {
           this._fetchGraphSources(this._processGraphSources);
         },
+        _getYAxisFormat: function () {
+          if (this.dataFormat == "bytes") {
+            return this.convertBytesToString;
+          } else {
+            return d3.format(",.1s");
+          }
+        },
+        _getXAxisFormat: function () {
+          switch (this.dataPeriod) {
+            case "hour":
+            case "day":
+              return "%H:%M";
+            case "week":
+              return "%d %b";
+            case "month":
+              return "%d %b";
+            case "year":
+              return "%d %b %Y";
+            default:
+              return "%x %X";
+          }
+        },
+        _getYAxisLabel: function () {
+          if (this.graphLabel == undefined) {
+            return "";
+          }
+          return this.graphLabel;
+        },
         _processGraphSources: function (objs) {
           var graphSourceURL = this._parseAttributeName(this.graphSourceURL);
           var graphSourceCaption = this._parseAttributeName(this.graphSourceCaption);
@@ -325,11 +357,14 @@ define([
             //Format x-axis labels with custom function.
             chart.xAxis
               .tickFormat(function(d) {
-                return d3.time.format('%x')(new Date(d))
+                var format = _widget._getXAxisFormat();
+                return d3.time.format(format)(new Date(d));
               });
 
             chart.yAxis
-              .tickFormat(d3.format(',.2f'));
+              .tickFormat(_widget._getYAxisFormat());
+            chart.yAxis
+              .axisLabel(_widget._getYAxisLabel());
 
             d3.select(svgNode)
               .datum(data)
@@ -375,6 +410,18 @@ define([
         _parseAttributeName: function (attributePath) {
           return attributePath.split("/")[2];
         },
+        convertBytesToString: function (bytes) {
+          var fmt = d3.format('.0f');
+          if (bytes < 1024) {
+            return fmt(bytes) + 'B';
+          } else if (bytes < 1024 * 1024) {
+            return fmt(bytes / 1024) + 'KB';
+          } else if (bytes < 1024 * 1024 * 1024) {
+            return fmt(bytes / 1024 / 1024) + 'MB';
+          } else {
+            return fmt(bytes / 1024 / 1024 / 1024) + 'GB';
+          }
+        }
     });
 });
 

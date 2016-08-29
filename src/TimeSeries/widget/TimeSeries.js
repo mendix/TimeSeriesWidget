@@ -315,27 +315,37 @@ define([
         _processGraphSources: function (objs) {
           var graphSourceURL = this._parseAttributeName(this.graphSourceURL);
           var graphSourceCaption = this._parseAttributeName(this.graphSourceCaption);
+          var graphSourceColor = undefined;
+          if (this.graphSourceColor !== undefined || this.graphSourceColor != "") {
+            graphSourceColor = this._parseAttributeName(this.graphSourceColor);
+          }
 
           var sources = objs.map(function(graphSource){
+            var color = undefined;
+            if (graphSourceColor !== undefined) {
+              color = graphSource.get(graphSourceColor);
+            }
             return {
               url: graphSource.get(graphSourceURL),
               caption: graphSource.get(graphSourceCaption),
+              color: color,
             };
           });
           this._renderGraphInternal(sources);
         },
 
-        _marshallSources: function (captions, results) {
+        _marshallSources: function (captions, colors, results) {
           var svgNode = this.svgNode;
           var data = [];
           var _widget = this;
           var i;
           for (i = 0; i < captions.length; i++) {
             data.push({
+              color: colors[i],
               key: captions[i],
               values: results[i].map(function(item){
                 return [item.timestamp, item.value];
-              })
+              }),
             });
           }
 
@@ -381,6 +391,9 @@ define([
           var captions = sources.map(function(item){
             return item.caption;
           });
+          var colors = sources.map(function(item){
+            return item.color;
+          });
           var queue = d3.queue();
           sources.map(function(item){
             queue.defer(d3.json, item.url);
@@ -388,7 +401,7 @@ define([
           queue.awaitAll(function(error, results){
             console.log(error);
             if (!error) {
-              _widget._marshallSources(captions, results);
+              _widget._marshallSources(captions, colors, results);
             }
           });
         },

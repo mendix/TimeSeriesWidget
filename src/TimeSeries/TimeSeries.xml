@@ -1,34 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <widget id="TimeSeries.widget.TimeSeries" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
     <name>TimeSeries</name>
-    <description>Renders multiple graph sources in a single time series graph</description>
+    <description>Renders a graph</description>
 
     <icon />
 
     <properties>
-        <property key="graphType" type="enumeration" defaultValue="line">
-            <caption>Graph type</caption>
-            <category>Appearance</category>
-            <description></description>
-            <enumerationValues>
-                <enumerationValue key="line">Line</enumerationValue>
-                <enumerationValue key="stackedarea">Stacked Area</enumerationValue>
-            </enumerationValues>
-        </property>
-        <property key="graphLabel" type="string" required="false">
-            <caption>Y-axis label</caption>
-            <category>Appearance</category>
-            <description></description>
-        </property>
-        <property key="dataFormat" type="enumeration" defaultValue="decimal">
-            <caption>Data format</caption>
-            <category>Appearance</category>
-            <description></description>
-            <enumerationValues>
-                <enumerationValue key="decimal">Decimal e.g. 1, 100</enumerationValue>
-                <enumerationValue key="bytes">Bytes e.g. 12B, 45MB</enumerationValue>
-            </enumerationValues>
-        </property>
         <property key="dataPeriod" type="enumeration" defaultValue="auto">
             <caption>Data period</caption>
             <category>Appearance</category>
@@ -42,26 +19,10 @@
                 <enumerationValue key="year">Year</enumerationValue>
             </enumerationValues>
         </property>
-        <property key="graphSourceURL" type="attribute" isPath="yes" pathType="referenceSet">
+        <property key="graphSourceURL" type="attribute" >
             <caption>URL</caption>
             <category>Graph source</category>
             <description>URL that replies with a JSON</description>
-            <attributeTypes>
-                <attributeType name="String" />
-            </attributeTypes>
-        </property>
-        <property key="graphSourceCaption" type="attribute" isPath="yes" pathType="referenceSet">
-            <caption>Caption</caption>
-            <category>Graph source</category>
-            <description>Name used to render the legend and tooltip.</description>
-            <attributeTypes>
-                <attributeType name="String" />
-            </attributeTypes>
-        </property>
-        <property key="graphSourceColor" type="attribute" required="false" isPath="yes" pathType="referenceSet">
-            <caption>Color</caption>
-            <category>Graph source</category>
-            <description>E.g. red, #123456. Leave empty for automated assignment.</description>
             <attributeTypes>
                 <attributeType name="String" />
             </attributeTypes>

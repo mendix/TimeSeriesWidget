@@ -54,13 +54,8 @@ define([
         svgNode: null,
 
         // Parameters configured in the Modeler.
-        graphType: "",
-        graphLabel: "",
         dataPeriod: "",
-        dataFormat: "",
         graphSourceURL: "",
-        graphSourceCaption: "",
-        graphSourceColor: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -183,15 +178,27 @@ define([
 
         // Helper/Internal functions
         _renderGraph: function () {
-          this._fetchGraphSources(this._processGraphSources);
+          console.log("start")
+          var widget = this;
+          this._contextObj.fetch(this.graphSourceURL, function(value) {
+              console.log("graphSourceURL: "+value);
+              d3.json(value, function(influxJson) {
+                console.log("influxJson");
+                console.log(influxJson);
+                widget._marshallSources(influxJson);
+              });
+
+          });
         },
-        _getYAxisFormat: function () {
-          if (this.dataFormat == "bytes") {
+
+        _getYAxisFormat: function (dataFormat) {
+          if (dataFormat == "bytes") {
             return this.convertBytesToString;
           } else {
             return d3.format(",.1s");
           }
         },
+
         _getXAxisFormat: function () {
           switch (this.dataPeriod) {
             case "hour":
@@ -213,46 +220,28 @@ define([
           }
           return this.graphLabel;
         },
-        _processGraphSources: function (objs) {
-          var graphSourceURL = this._parseAttributeName(this.graphSourceURL);
-          var graphSourceCaption = this._parseAttributeName(this.graphSourceCaption);
-          var graphSourceColor = undefined;
-          if (this.graphSourceColor !== undefined || this.graphSourceColor != "") {
-            graphSourceColor = this._parseAttributeName(this.graphSourceColor);
-          }
 
-          var sources = objs.map(function(graphSource){
-            var color = undefined;
-            if (graphSourceColor !== undefined) {
-              color = graphSource.get(graphSourceColor);
-            }
-            return {
-              url: graphSource.get(graphSourceURL),
-              caption: graphSource.get(graphSourceCaption),
-              color: color,
-            };
-          });
-          this._renderGraphInternal(sources);
-        },
 
-        _marshallSources: function (captions, colors, results) {
+        _marshallSources: function (graphData) {
           var svgNode = this.svgNode;
           var data = [];
           var _widget = this;
-          var i;
-          for (i = 0; i < captions.length; i++) {
+          graphData.metrics.map(function(metric){
+            var values = [];
+            for (var i = 0; i < graphData.timestamps.length; i++) {
+              values.push([graphData.timestamps[i], metric.values[i]]);
+            }
             data.push({
-              color: colors[i],
-              key: captions[i],
-              values: results[i].map(function(item){
-                return [item.timestamp, item.value];
-              }),
+              color: metric.color,
+              key: metric.caption,
+              values: values,
             });
-          }
+          });
+          console.log(data);
 
           nv.addGraph(function() {
             var chart;
-            if (_widget.graphType == "line") {
+            if (graphData.render == "line") {
               chart = nv.models.lineChart();
             } else {
               chart = nv.models.stackedAreaChart();
@@ -273,9 +262,9 @@ define([
               });
 
             chart.yAxis
-              .tickFormat(_widget._getYAxisFormat());
+              .tickFormat(_widget._getYAxisFormat(graphData.datatype));
             chart.yAxis
-              .axisLabel(_widget._getYAxisLabel());
+              .axisLabel(_widget._getYAxisLabel(graphData.label));
 
             d3.select(svgNode)
               .datum(data)
@@ -287,44 +276,6 @@ define([
           });
         },
 
-        _renderGraphInternal: function (sources) {
-          var _widget = this;
-          var captions = sources.map(function(item){
-            return item.caption;
-          });
-          var colors = sources.map(function(item){
-            return item.color;
-          });
-          var queue = d3.queue();
-          sources.map(function(item){
-            queue.defer(d3.json, item.url);
-          });
-          queue.awaitAll(function(error, results){
-            if (error) {
-              _widget._showError(error);
-            } else {
-              _widget._marshallSources(captions, colors, results);
-            }
-          });
-        },
-
-        _fetchGraphSources: function (callback) {
-          var referenceName = this._parseReferenceName(this.graphSourceURL);
-          var graphSourceGuids = this._contextObj.getReferences(referenceName);
-          mx.data.get({
-            guids: graphSourceGuids,
-            callback: callback
-          }, this);
-        },
-        _parseReferenceName: function (attributePath) {
-          return attributePath.split("/")[0];
-        },
-        _parseEntityName: function (attributePath) {
-          return attributePath.split("/")[1];
-        },
-        _parseAttributeName: function (attributePath) {
-          return attributePath.split("/")[2];
-        },
         convertBytesToString: function (bytes) {
           var fmt = d3.format('.0f');
           if (bytes < 1024) {

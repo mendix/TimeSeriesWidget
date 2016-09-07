@@ -176,16 +176,11 @@ define([
 
         // Helper/Internal functions
         _renderGraph: function () {
-          console.log("start")
           var widget = this;
-          this._contextObj.fetch(this.graphSourceURL, function(value) {
-              console.log("graphSourceURL: "+value);
-              d3.json(value, function(influxJson) {
-                console.log("influxJson");
-                console.log(influxJson);
-                widget._marshallSources(influxJson);
+          this._contextObj.fetch(this.graphSourceURL, function(url) {
+              d3.json(url, function(data) {
+                widget._marshallSources(data);
               });
-
           });
         },
 
@@ -197,8 +192,8 @@ define([
           }
         },
 
-        _getXAxisFormat: function () {
-          switch (this.dataPeriod) {
+        _getXAxisFormat: function (period) {
+          switch (period) {
             case "hour":
             case "day":
               return "%H:%M";
@@ -212,11 +207,11 @@ define([
               return "%x %X";
           }
         },
-        _getYAxisLabel: function () {
-          if (this.graphLabel == undefined) {
+        _getYAxisLabel: function (label) {
+          if (label === undefined) {
             return "";
           }
-          return this.graphLabel;
+          return label;
         },
 
 
@@ -226,7 +221,8 @@ define([
           var _widget = this;
           graphData.metrics.map(function(metric){
             var values = [];
-            for (var i = 0; i < graphData.timestamps.length; i++) {
+            var i;
+            for (i = 0; i < graphData.timestamps.length; i++) {
               values.push([graphData.timestamps[i], metric.values[i]]);
             }
             data.push({
@@ -235,7 +231,6 @@ define([
               values: values,
             });
           });
-          console.log(data);
 
           nv.addGraph(function() {
             var chart;
@@ -255,7 +250,7 @@ define([
             //Format x-axis labels with custom function.
             chart.xAxis
               .tickFormat(function(d) {
-                var format = _widget._getXAxisFormat();
+                var format = _widget._getXAxisFormat(graphData.period);
                 return d3.time.format(format)(new Date(d));
               });
 

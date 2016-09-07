@@ -35,15 +35,13 @@ define([
     "dojo/_base/event",
 
     "TimeSeries/lib/jquery-1.11.2",
-    "TimeSeries/lib/d3-queue-3.0.3",
     "dojo/text!TimeSeries/widget/template/TimeSeries.html",
     "TimeSeries/lib/d3-3.5.17",
     "TimeSeries/lib/nv.d3.min-1.8.1"
-], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, dojoLang, dojoText, dojoHtml, dojoEvent, _jQuery, _Queue, widgetTemplate) {
+], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, dojoLang, dojoText, dojoHtml, dojoEvent, _jQuery, widgetTemplate) {
     "use strict";
 
     var $ = _jQuery.noConflict(true);
-    window.d3.queue = _Queue.queue;
 
     // Declare widget's prototype.
     return declare("TimeSeries.widget.TimeSeries", [ _WidgetBase, _TemplatedMixin ], {

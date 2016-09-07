@@ -52,7 +52,6 @@ define([
         svgNode: null,
 
         // Parameters configured in the Modeler.
-        dataPeriod: "",
         graphSourceURL: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.

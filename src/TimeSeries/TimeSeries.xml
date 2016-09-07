@@ -6,19 +6,6 @@
     <icon />
 
     <properties>
-        <property key="dataPeriod" type="enumeration" defaultValue="auto">
-            <caption>Data period</caption>
-            <category>Appearance</category>
-            <description>What time frame does this data show?</description>
-            <enumerationValues>
-                <enumerationValue key="auto">Automatically</enumerationValue>
-                <enumerationValue key="hour">Hour</enumerationValue>
-                <enumerationValue key="day">Day</enumerationValue>
-                <enumerationValue key="week">Week</enumerationValue>
-                <enumerationValue key="month">Month</enumerationValue>
-                <enumerationValue key="year">Year</enumerationValue>
-            </enumerationValues>
-        </property>
         <property key="graphSourceURL" type="attribute" >
             <caption>URL</caption>
             <category>Graph source</category>

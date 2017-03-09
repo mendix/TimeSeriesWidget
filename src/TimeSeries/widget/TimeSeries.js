@@ -192,7 +192,7 @@ define([
           if (dataFormat == "bytes") {
             return this.convertBytesToString;
           } else {
-            return d3.format(",.1s");
+            return d3.format(".1f");
           }
         },
 
@@ -238,8 +238,13 @@ define([
 
           nv.addGraph(function() {
             var chart;
+            var maxValCandidates = [];
             if (graphData.render == "line") {
               chart = nv.models.lineChart();
+              for (var i = 0; i < data.length; i++) {
+                maxValCandidates.push(Math.max( ...data[i].values ));
+              }
+                chart.lines.forceY([0.0, Math.max( ...maxValCandidates )]);
             } else {
               chart = nv.models.stackedAreaChart();
               chart = chart.showControls(false);

@@ -1,7 +1,7 @@
-all: TimeSeries.mpk
+all: TimeSeriesWidget.mpk
 
-TimeSeries.mpk:
-	cd src && zip -r ../TimeSeries.mpk *
+TimeSeriesWidget.mpk:
+	cd src && zip -r ../TimeSeriesWidget.mpk *
 
 clean:
-	rm -f TimeSeries.mpk
+	rm -f TimeSeriesWidget.mpk

@@ -192,7 +192,7 @@ define([
           if (dataFormat == "bytes") {
             return this.convertBytesToString;
           } else {
-            return d3.format(".1f");
+            return d3.format(".4s");
           }
         },
 

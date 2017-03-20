@@ -246,7 +246,11 @@ define([
               for (var i = 0; i < data.length; i++) {
                 maxValCandidates.push(Math.max.apply(null, data[i].values));
               }
+              if (graphData.datatype == "percentage") {
+                chart.lines.forceY([0.0, 100.0]);
+              } else {
                 chart.lines.forceY([0.0, Math.max.apply(null, maxValCandidates)]);
+              }
             } else {
               chart = nv.models.stackedAreaChart();
               chart = chart.showControls(false);

@@ -191,6 +191,8 @@ define([
         _getYAxisFormat: function (dataFormat) {
           if (dataFormat == "bytes") {
             return this.convertBytesToString;
+          } else if (dataFormat == "percentage") {
+            return d3.format(".1f");
           } else {
             return d3.format(".4s");
           }

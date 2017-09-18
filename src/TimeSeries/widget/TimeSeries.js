@@ -37,7 +37,7 @@ define([
     "TimeSeries/lib/jquery-1.11.2",
     "dojo/text!TimeSeries/widget/template/TimeSeries.html",
     "TimeSeries/lib/d3-3.5.17",
-    "TimeSeries/lib/nv.d3.min-1.8.5"
+    "TimeSeries/lib/nv.d3.min-1.8.6"
 ], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, dojoLang, dojoText, dojoHtml, dojoEvent, _jQuery, widgetTemplate) {
     "use strict";
 
@@ -194,7 +194,9 @@ define([
           } else if (dataFormat == "percentage") {
             return d3.format(".1f");
           } else {
-            return d3.format(".4s");
+            // if its not a byte and not a percentage then do grouped formatting with three significat digits
+            // this way we handle both big numbers and small numbers gracefully
+            return d3.format(",.3r");
           }
         },
 
@@ -241,15 +243,25 @@ define([
           nv.addGraph(function() {
             var chart;
             var maxValCandidates = [];
+            var maxCandidate;
             if (graphData.render == "line") {
               chart = nv.models.lineChart();
               for (var i = 0; i < data.length; i++) {
-                maxValCandidates.push(Math.max.apply(null, data[i].values));
+                var filteredValues = data[i].values.filter(function(n){return isFinite(n); });
+                if (filteredValues.length > 0) {
+                  maxValCandidates.push(Math.max.apply(null, filteredValues));
+                  }
               }
               if (graphData.datatype == "percentage") {
                 chart.lines.forceY([0.0, 100.0]);
               } else {
-                chart.lines.forceY([0.0, Math.max.apply(null, maxValCandidates)]);
+              if (maxValCandidates.length > 0 ) {
+                maxCandidate = Math.max.apply(null, maxValCandidates);
+                // defining the max val on Y axis is always 10 percent more then the avail max val
+                chart.lines.forceY([0.0, Math.ceil(maxCandidate * 1.1)]);
+              } else {
+                 chart.lines.forceY([0.0]);
+               }
               }
             } else {
               chart = nv.models.stackedAreaChart();
@@ -259,7 +271,7 @@ define([
               .x(function(d) { return d[0] })
               .y(function(d) { return d[1] })
               .useInteractiveGuideline(true)
-              .rightAlignYAxis(true)
+              .rightAlignYAxis(false)
               .clipEdge(true);
 
             //Format x-axis labels with custom function.
@@ -284,16 +296,15 @@ define([
           });
         },
 
+
         convertBytesToString: function (bytes) {
           var fmt = d3.format('.0f');
           if (bytes < 1024) {
             return fmt(bytes) + 'B';
           } else if (bytes < 1024 * 1024) {
             return fmt(bytes / 1024) + 'KB';
-          } else if (bytes < 1024 * 1024 * 1024) {
-            return fmt(bytes / 1024 / 1024) + 'MB';
           } else {
-            return fmt(bytes / 1024 / 1024 / 1024) + 'GB';
+            return fmt(bytes / 1024 / 1024) + 'MB';
           }
         }
     });

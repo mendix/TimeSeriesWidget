@@ -53,7 +53,6 @@ define([
 
         // Parameters configured in the Modeler.
         graphSourceURL: "",
-        isRendered: false,
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -176,10 +175,6 @@ define([
 
         // Helper/Internal functions
         _renderGraph: function () {
-          if (this.isRendered) {
-            return;
-          }
-          this.isRendered = true;
           var widget = this;
           this._contextObj.fetch(this.graphSourceURL, function(url) {
               d3.json(url, function(data) {

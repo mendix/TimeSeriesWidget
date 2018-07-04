@@ -90,6 +90,7 @@ define([
         uninitialize: function () {
           logger.debug(this.id + ".uninitialize");
             // Clean up listeners, helper objects, etc. There is no need to remove listeners added with this.connect / this.subscribe / this.own.
+          d3.selectAll(".nvtooltip").remove();
         },
 
         // We want to stop events on a mobile device
